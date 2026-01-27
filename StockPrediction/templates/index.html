@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 25%, #2d2d2d 50%, #1a1a1a 75%, #0d0d0d 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        
+        .controls {
+            background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .form-group { flex: 1; min-width: 150px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #888; }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: linear-gradient(145deg, #1a1a1a, #252525);
+            color: #fff;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: #666;
+        }
+        
+        button {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #444, #666);
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover { 
+            background: linear-gradient(135deg, #555, #777);
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #3a3a3a;
+            border-left: 4px solid #666;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .stat-card.lr { border-left-color: #ef4444; }
+        .stat-card.lstm { border-left-color: #22c55e; }
+        .stat-card.winner { border-left-color: #f59e0b; }
+        
+        .stat-label { color: #888; font-size: 14px; }
+        .stat-value { font-size: 24px; font-weight: bold; margin-top: 5px; }
+        .stat-value.lr { color: #ef4444; }
+        .stat-value.lstm { color: #22c55e; }
+        .stat-value.winner { color: #f59e0b; }
+        
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+        
+        .chart-card {
+            background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .chart-card h3 { margin-bottom: 15px; color: #ccc; }
+        .chart-container { height: 300px; }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        .loading.active { display: flex; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid #333;
+            border-top-color: #888;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .metrics-table {
+            background: linear-gradient(145deg, #1f1f1f, #2a2a2a);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .metrics-table h3 { color: #ccc; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        th { color: #888; }
+        td { color: #bbb; }
+        .better { color: #22c55e; font-weight: bold; }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; color: #888;">Training models... Please wait</p>
+    </div>
+
+    <div class="container">
+        <h1>Stock Price Prediction</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+            Comparing Linear Regression vs LSTM Models
+        </p>
+        
+        <div class="controls">
+            <div class="form-group">
+                <label>Stock Ticker</label>
+                <select id="ticker">
+                    <option value="AAPL">AAPL - Apple</option>
+                    <option value="GOOGL">GOOGL - Google</option>
+                    <option value="MSFT">MSFT - Microsoft</option>
+                    <option value="TSLA">TSLA - Tesla</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>LSTM Epochs</label>
+                <input type="number" id="epochs" value="50" min="20" max="100">
+            </div>
+            <button onclick="trainModels()" id="trainBtn">Train & Compare</button>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card lr">
+                <div class="stat-label">Linear Regression R²</div>
+                <div class="stat-value lr" id="lrR2">-</div>
+            </div>
+            <div class="stat-card lstm">
+                <div class="stat-label">LSTM R²</div>
+                <div class="stat-value lstm" id="lstmR2">-</div>
+            </div>
+            <div class="stat-card lr">
+                <div class="stat-label">LR RMSE</div>
+                <div class="stat-value lr" id="lrRmse">-</div>
+            </div>
+            <div class="stat-card lstm">
+                <div class="stat-label">LSTM RMSE</div>
+                <div class="stat-value lstm" id="lstmRmse">-</div>
+            </div>
+            <div class="stat-card winner">
+                <div class="stat-label">Winner</div>
+                <div class="stat-value winner" id="winner">-</div>
+            </div>
+        </div>
+        
+        <div class="charts">
+            <div class="chart-card">
+                <h3>Linear Regression Predictions</h3>
+                <div class="chart-container">
+                    <canvas id="lrChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>LSTM Predictions</h3>
+                <div class="chart-container">
+                    <canvas id="lstmChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics-table" id="metricsTable" style="display: none;">
+            <h3>Metrics Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Linear Regression</th>
+                        <th>LSTM</th>
+                    </tr>
+                </thead>
+                <tbody id="metricsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let lrChart, lstmChart;
+        
+        function initCharts() {
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#999' } } },
+                scales: {
+                    x: { ticks: { color: '#666' }, grid: { color: '#2a2a2a' } },
+                    y: { ticks: { color: '#666' }, grid: { color: '#2a2a2a' } }
+                }
+            };
+            
+            lrChart = new Chart(document.getElementById('lrChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Actual', data: [], borderColor: '#6b9fff', tension: 0.1 },
+                        { label: 'Predicted', data: [], borderColor: '#ef4444', borderDash: [5,5], tension: 0.1 }
+                    ]
+                },
+                options
+            });
+            
+            lstmChart = new Chart(document.getElementById('lstmChart'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Actual', data: [], borderColor: '#6b9fff', tension: 0.1 },
+                        { label: 'Predicted', data: [], borderColor: '#22c55e', borderDash: [5,5], tension: 0.1 }
+                    ]
+                },
+                options
+            });
+        }
+        
+        async function trainModels() {
+            const ticker = document.getElementById('ticker').value;
+            const epochs = document.getElementById('epochs').value;
+            
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('trainBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/train', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker, epochs: parseInt(epochs) })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateUI(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('trainBtn').disabled = false;
+            }
+        }
+        
+        function updateUI(data) {
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('metricsTable').style.display = 'block';
+            
+            // Update stats
+            document.getElementById('lrR2').textContent = data.linear_regression.metrics.r2.toFixed(4);
+            document.getElementById('lstmR2').textContent = data.lstm.metrics.r2.toFixed(4);
+            document.getElementById('lrRmse').textContent = '$' + data.linear_regression.metrics.rmse.toFixed(2);
+            document.getElementById('lstmRmse').textContent = '$' + data.lstm.metrics.rmse.toFixed(2);
+            document.getElementById('winner').textContent = data.winner;
+            
+            // Update LR chart
+            lrChart.data.labels = data.linear_regression.dates;
+            lrChart.data.datasets[0].data = data.linear_regression.actual;
+            lrChart.data.datasets[1].data = data.linear_regression.predictions;
+            lrChart.update();
+            
+            // Update LSTM chart
+            lstmChart.data.labels = data.lstm.dates;
+            lstmChart.data.datasets[0].data = data.lstm.actual;
+            lstmChart.data.datasets[1].data = data.lstm.predictions;
+            lstmChart.update();
+            
+            // Update metrics table
+            const lr = data.linear_regression.metrics;
+            const lstm = data.lstm.metrics;
+            
+            document.getElementById('metricsBody').innerHTML = `
+                <tr>
+                    <td>MSE</td>
+                    <td class="${lr.mse < lstm.mse ? 'better' : ''}">${lr.mse.toFixed(2)}</td>
+                    <td class="${lstm.mse < lr.mse ? 'better' : ''}">${lstm.mse.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>RMSE</td>
+                    <td class="${lr.rmse < lstm.rmse ? 'better' : ''}">$${lr.rmse.toFixed(2)}</td>
+                    <td class="${lstm.rmse < lr.rmse ? 'better' : ''}">$${lstm.rmse.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>MAE</td>
+                    <td class="${lr.mae < lstm.mae ? 'better' : ''}">$${lr.mae.toFixed(2)}</td>
+                    <td class="${lstm.mae < lr.mae ? 'better' : ''}">$${lstm.mae.toFixed(2)}</td>
+                </tr>
+                <tr>
+                    <td>R² Score</td>
+                    <td class="${lr.r2 > lstm.r2 ? 'better' : ''}">${lr.r2.toFixed(4)}</td>
+                    <td class="${lstm.r2 > lr.r2 ? 'better' : ''}">${lstm.r2.toFixed(4)}</td>
+                </tr>
+            `;
+        }
+        
+        document.addEventListener('DOMContentLoaded', initCharts);
+    </script>
+</body>
+</html>

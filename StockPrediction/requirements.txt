@@ -1,0 +1,8 @@
+# Stock Price Prediction Dependencies
+pandas
+numpy
+yfinance
+scikit-learn
+tensorflow
+flask
+flask-cors

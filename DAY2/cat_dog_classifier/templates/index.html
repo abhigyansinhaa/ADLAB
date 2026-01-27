@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat vs Dog Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #2d2d2d 50%, #1a1a1a 75%, #0a0a0a 100%);
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .container {
+            background: linear-gradient(145deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            z-index: 1;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #3d3d3d, #1a1a1a, #3d3d3d);
+            border-radius: 26px;
+            z-index: -1;
+            opacity: 0.8;
+            filter: blur(8px);
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+        }
+        h1::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #4a4a4a, #6a6a6a, #4a4a4a);
+            margin: 8px auto 0;
+            border-radius: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .upload-area.hidden {
+            display: none;
+        }
+        .upload-area:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.3s;
+        }
+        .upload-area:hover .upload-icon {
+            border-color: rgba(255, 255, 255, 0.6);
+            color: #fff;
+            transform: scale(1.1);
+        }
+        .upload-area p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .upload-hint {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+        #fileInput {
+            display: none;
+        }
+        .preview-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 12px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        #imagePreview:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+        select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+        select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3d3d3d 0%, #2a2a2a 50%, #1a1a1a 100%);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        button:hover::before {
+            left: 100%;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 50%, #2a2a2a 100%);
+        }
+        button:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.05);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        button:disabled::before {
+            display: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+        .result.success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 2px solid rgba(40, 167, 69, 0.5);
+            color: #7bed9f;
+            display: block;
+        }
+        .result.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid rgba(220, 53, 69, 0.5);
+            color: #ff6b6b;
+            display: block;
+        }
+        .result strong {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cat vs Dog Classifier</h1>
+        <p class="subtitle">AI-powered image classification</p>
+        
+        <div id="uploadArea" class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">+</div>
+            <p>Click to upload an image</p>
+            <span class="upload-hint">JPG, PNG supported</span>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        
+        <div class="preview-container">
+            <img id="imagePreview" alt="Preview">
+        </div>
+        
+        <label for="modelSelect">Select Model</label>
+        <select id="modelSelect">
+            <option value="svm">SVM</option>
+            <option value="random_forest">Random Forest</option>
+            <option value="logistic_regression">Logistic Regression</option>
+            <option value="kmeans">K-means</option>
+        </select>
+        
+        <button id="predictBtn" onclick="predict()" disabled>Classify</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const predictBtn = document.getElementById('predictBtn');
+        const result = document.getElementById('result');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    uploadArea.classList.add('hidden');
+                    predictBtn.disabled = false;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        // Click on preview to change image
+        imagePreview.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        function predict() {
+            const file = fileInput.files[0];
+            const model = document.getElementById('modelSelect').value;
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('model', model);
+            
+            predictBtn.disabled = true;
+            predictBtn.textContent = 'Processing...';
+            result.className = 'result';
+            
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                predictBtn.textContent = 'Classify';
+                if (data.error) {
+                    result.className = 'result error';
+                    result.innerHTML = 'Error: ' + data.error;
+                } else {
+                    result.className = 'result success';
+                    const emoji = data.prediction === 'Cat' ? '🐱' : '🐶';
+                    const conf = data.confidence ? (data.confidence * 100).toFixed(1) + '%' : 'N/A';
+                    result.innerHTML = `<strong>${emoji} ${data.prediction}</strong>Confidence: ${conf}`;
+                }
+                predictBtn.disabled = false;
+            })
+            .catch(error => {
+                predictBtn.textContent = 'Classify';
+                result.className = 'result error';
+                result.innerHTML = 'Error: ' + error.message;
+                predictBtn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
