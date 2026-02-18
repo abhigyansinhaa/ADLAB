@@ -1,0 +1,11 @@
+# Flask
+flask
+
+# Document processing
+PyPDF2
+python-docx
+openpyxl
+pandas
+
+# HTTP requests for Ollama API
+requests
