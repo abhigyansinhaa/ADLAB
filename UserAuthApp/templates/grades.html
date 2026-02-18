@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Grades - User Auth{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Your Grades</h1>
+
+<p style="color: var(--text-muted); margin-bottom: 1rem;">Grades are displayed in read-only mode. Only administrators can update them.</p>
+
+{% if grades %}
+<div class="card" style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 0.75rem;">Subject</th>
+                <th style="text-align: left; padding: 0.75rem;">Marks</th>
+                <th style="text-align: left; padding: 0.75rem;">Max</th>
+                <th style="text-align: left; padding: 0.75rem;">Grade</th>
+                <th style="text-align: left; padding: 0.75rem;">Semester</th>
+                <th style="text-align: left; padding: 0.75rem;">Year</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for g in grades %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem;">{{ g.subject }}</td>
+                <td style="padding: 0.75rem;">{{ g.marks }}</td>
+                <td style="padding: 0.75rem;">{{ g.max_marks }}</td>
+                <td style="padding: 0.75rem;">{{ g.grade }}</td>
+                <td style="padding: 0.75rem;">{{ g.semester }}</td>
+                <td style="padding: 0.75rem;">{{ g.academic_year }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p style="color: var(--text-muted);">No grades found yet.</p>
+    <p style="margin-top: 0.5rem;">Administrators can add grades in the database.</p>
+    <a href="{{ url_for('add_sample_grades') }}" class="btn btn-secondary" style="margin-top: 1rem;">Add Sample Grades (Demo)</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - User Auth{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Welcome, {{ session.full_name or session.username }}!</h1>
+
+<div class="grid-3">
+    <a href="{{ url_for('profile') }}" class="card" style="text-decoration: none; color: inherit; display: block;">
+        <h2>Profile</h2>
+        <p style="color: var(--text-muted);">Update your personal details, phone, and address.</p>
+        <span class="btn btn-secondary" style="margin-top: 0.5rem;">Manage Profile &rarr;</span>
+    </a>
+    <a href="{{ url_for('reset_password') }}" class="card" style="text-decoration: none; color: inherit; display: block;">
+        <h2>Reset Password</h2>
+        <p style="color: var(--text-muted);">Change your account password securely.</p>
+        <span class="btn btn-secondary" style="margin-top: 0.5rem;">Reset &rarr;</span>
+    </a>
+    <a href="{{ url_for('grades') }}" class="card" style="text-decoration: none; color: inherit; display: block;">
+        <h2>Grades</h2>
+        <p style="color: var(--text-muted);">View your marks and grades (read-only).</p>
+        <span class="btn btn-secondary" style="margin-top: 0.5rem;">View Grades &rarr;</span>
+    </a>
+</div>
+
+<div class="card" style="margin-top: 1rem;">
+    <h2>Quick Actions</h2>
+    <div class="grid-2" style="margin-top: 0.5rem;">
+        <a href="{{ url_for('documents') }}" class="btn btn-primary">Upload Documents</a>
+        <a href="{{ url_for('add_sample_grades') }}" class="btn btn-secondary">Add Sample Grades (Demo)</a>
+    </div>
+</div>
+{% endblock %}

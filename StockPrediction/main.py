@@ -57,7 +57,7 @@ def main(ticker='AAPL', epochs=50):
     
     print("\n" + "="*50)
     print("   To run web app: python app.py")
-    print("   Then open http://localhost:5000")
+    print("   Then open http://localhost:8000")
     print("="*50 + "\n")
 
 

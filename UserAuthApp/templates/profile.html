@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Profile - User Auth{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Profile</h1>
+
+<div class="card" style="max-width: 560px;">
+    <h2>Personal Details</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1rem;">Update your information below. Username and email cannot be changed.</p>
+
+    <form method="POST" action="{{ url_for('profile') }}">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" value="{{ user.username }}" disabled style="opacity: 0.7;">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="text" value="{{ user.email }}" disabled style="opacity: 0.7;">
+        </div>
+        <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" value="{{ user.full_name }}" placeholder="Your full name">
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" value="{{ user.phone }}" placeholder="Phone number">
+        </div>
+        <div class="form-group">
+            <label for="address">Address</label>
+            <textarea id="address" name="address" rows="3" placeholder="Your address">{{ user.address }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+</div>
+
+<div style="margin-top: 1rem;">
+    <a href="{{ url_for('reset_password') }}" class="btn btn-secondary">Reset Password</a>
+</div>
+{% endblock %}

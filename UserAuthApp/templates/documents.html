@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Documents - User Auth{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Documents</h1>
+
+<div class="card" style="max-width: 560px; margin-bottom: 1.5rem;">
+    <h2>Upload Document</h2>
+    <form method="POST" action="{{ url_for('documents') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" placeholder="Document title">
+        </div>
+        <div class="form-group">
+            <label for="file">File</label>
+            <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Your Documents</h2>
+    {% if documents %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="text-align: left; padding: 0.75rem;">Title</th>
+                    <th style="text-align: left; padding: 0.75rem;">Filename</th>
+                    <th style="text-align: left; padding: 0.75rem;">Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;">{{ doc.title }}</td>
+                    <td style="padding: 0.75rem;">{{ doc.filename }}</td>
+                    <td style="padding: 0.75rem;">{{ doc.created_at[:10] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted);">No documents uploaded yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

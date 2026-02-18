@@ -118,6 +118,6 @@ def predict_future():
 if __name__ == '__main__':
     print("\n" + "="*50)
     print("Stock Price Prediction API")
-    print("Open http://localhost:5000 in your browser")
+    print("Open http://localhost:8000 in your browser")
     print("="*50 + "\n")
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8000)
