@@ -152,6 +152,6 @@ def clear():
 
 if __name__ == '__main__':
     print("\n" + "="*50)
-    print("Document Chatbot - http://localhost:5000")
+    print("Document Chatbot - http://localhost:8000")
     print("="*50 + "\n")
-    app.run(debug=True, port=5000, threaded=True)
+    app.run(debug=True, port=8000, threaded=True)
