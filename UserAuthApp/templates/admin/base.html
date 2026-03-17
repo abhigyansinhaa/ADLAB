@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{% block admin_title %}Admin{% endblock %} - User Auth{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">← Admin Home</a>
+    <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Users</a>
+    <a href="{{ url_for('admin_grades') }}" class="btn btn-secondary">Grades</a>
+</div>
+{% block admin_content %}{% endblock %}
+{% endblock %}

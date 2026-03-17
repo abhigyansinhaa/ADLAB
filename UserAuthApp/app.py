@@ -50,6 +50,20 @@ def login_required(f):
     return decorated_function
 
 
+def admin_required(f):
+    """Decorator to require admin role for admin routes."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('login'))
+        if not session.get('is_admin'):
+            flash('Admin access required.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def allowed_file(filename):
     """Check if file extension is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -63,6 +77,8 @@ def allowed_file(filename):
 def index():
     """Landing page - redirect to login or dashboard."""
     if 'user_id' in session:
+        if session.get('is_admin'):
+            return redirect(url_for('admin_dashboard'))
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
@@ -79,7 +95,10 @@ def login():
             return render_template('login.html')
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, username, password, full_name FROM users WHERE username = %s", (username,))
+        try:
+            cur.execute("SELECT id, username, password, full_name, COALESCE(is_admin, 0) FROM users WHERE username = %s", (username,))
+        except Exception:
+            cur.execute("SELECT id, username, password, full_name FROM users WHERE username = %s", (username,))
         user = cur.fetchone()
         cur.close()
 
@@ -87,7 +106,10 @@ def login():
             session['user_id'] = user[0]
             session['username'] = user[1]
             session['full_name'] = user[3] or user[1]
+            session['is_admin'] = bool(user[4]) if len(user) > 4 else False
             flash(f'Welcome back, {session["full_name"]}!', 'success')
+            if session.get('is_admin'):
+                return redirect(url_for('admin_dashboard'))
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password.', 'danger')
@@ -339,7 +361,111 @@ def documents():
 
 
 # ============================================
-# Admin: Add sample grades (for testing)
+# Admin Panel
+# ============================================
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard - overview of users and grades."""
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT COUNT(*) FROM users")
+    user_count = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM grades")
+    grade_count = cur.fetchone()[0]
+    cur.close()
+    return render_template('admin/dashboard.html', user_count=user_count, grade_count=grade_count)
+
+
+@app.route('/admin/users')
+@admin_required
+def admin_users():
+    """List all users."""
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "SELECT id, username, email, full_name, created_at, COALESCE(is_admin, 0) FROM users ORDER BY id"
+    )
+    rows = cur.fetchall()
+    cur.close()
+    users = [
+        {'id': r[0], 'username': r[1], 'email': r[2], 'full_name': r[3] or '-', 'created_at': str(r[4]), 'is_admin': bool(r[5])}
+        for r in rows
+    ]
+    return render_template('admin/users.html', users=users)
+
+
+@app.route('/admin/grades', methods=['GET', 'POST'])
+@admin_required
+def admin_grades():
+    """Add or view grades for users."""
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+        user_id = request.form.get('user_id', type=int)
+        subject = request.form.get('subject', '').strip()
+        marks = request.form.get('marks', type=float)
+        max_marks = request.form.get('max_marks', type=float) or 100
+        grade = request.form.get('grade', '').strip()
+        semester = request.form.get('semester', '').strip()
+        academic_year = request.form.get('academic_year', '').strip()
+
+        if user_id and subject and marks is not None:
+            cur.execute(
+                """INSERT INTO grades (user_id, subject, marks, max_marks, grade, semester, academic_year)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (user_id, subject, marks, max_marks, grade or None, semester or None, academic_year or None)
+            )
+            mysql.connection.commit()
+            flash(f'Grade for {subject} added successfully!', 'success')
+        else:
+            flash('User, subject, and marks are required.', 'danger')
+        cur.close()
+        return redirect(url_for('admin_grades'))
+
+    cur.execute("SELECT id, username, full_name FROM users ORDER BY username")
+    users = [{'id': r[0], 'username': r[1], 'full_name': r[2] or r[1]} for r in cur.fetchall()]
+
+    cur.execute(
+        """SELECT g.id, u.username, g.subject, g.marks, g.max_marks, g.grade, g.semester, g.academic_year
+           FROM grades g JOIN users u ON g.user_id = u.id ORDER BY u.username, g.semester, g.subject"""
+    )
+    grades_list = cur.fetchall()
+    cur.close()
+
+    grades_data = [
+        {'id': r[0], 'username': r[1], 'subject': r[2], 'marks': r[3], 'max_marks': r[4], 'grade': r[5] or '-', 'semester': r[6] or '-', 'academic_year': r[7] or '-'}
+        for r in grades_list
+    ]
+
+    return render_template('admin/grades.html', users=users, grades=grades_data)
+
+
+@app.route('/admin/grades/delete/<int:grade_id>', methods=['POST'])
+@admin_required
+def admin_delete_grade(grade_id):
+    """Delete a grade entry."""
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM grades WHERE id = %s", (grade_id,))
+    mysql.connection.commit()
+    cur.close()
+    flash('Grade deleted.', 'success')
+    return redirect(url_for('admin_grades'))
+
+
+@app.route('/admin/set-admin/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_set_admin(user_id):
+    """Promote a user to admin."""
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE users SET is_admin = 1 WHERE id = %s", (user_id,))
+    mysql.connection.commit()
+    cur.close()
+    flash('User promoted to admin.', 'success')
+    return redirect(url_for('admin_users'))
+
+
+# ============================================
+# User: Add sample grades (for testing)
 # ============================================
 
 @app.route('/admin/add-sample-grades')

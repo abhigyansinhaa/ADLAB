@@ -1,0 +1,92 @@
+{% extends "admin/base.html" %}
+{% block admin_title %}Grades{% endblock %}
+
+{% block admin_content %}
+<h1 style="margin-bottom: 1.5rem;">Manage Grades</h1>
+
+<div class="card" style="max-width: 560px; margin-bottom: 1.5rem;">
+    <h2>Add Grade</h2>
+    <form method="POST" action="{{ url_for('admin_grades') }}">
+        <div class="form-group">
+            <label for="user_id">User</label>
+            <select id="user_id" name="user_id" required>
+                <option value="">Select user...</option>
+                {% for u in users %}
+                <option value="{{ u.id }}">{{ u.username }} ({{ u.full_name }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <input type="text" id="subject" name="subject" required placeholder="e.g. Mathematics">
+            </div>
+            <div class="form-group">
+                <label for="grade">Grade</label>
+                <input type="text" id="grade" name="grade" placeholder="e.g. A, B+">
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="marks">Marks</label>
+                <input type="number" id="marks" name="marks" step="0.01" required placeholder="85">
+            </div>
+            <div class="form-group">
+                <label for="max_marks">Max Marks</label>
+                <input type="number" id="max_marks" name="max_marks" step="0.01" value="100" placeholder="100">
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="semester">Semester</label>
+                <input type="text" id="semester" name="semester" placeholder="1">
+            </div>
+            <div class="form-group">
+                <label for="academic_year">Academic Year</label>
+                <input type="text" id="academic_year" name="academic_year" placeholder="2024-25">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Grade</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>All Grades</h2>
+    {% if grades %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="text-align: left; padding: 0.75rem;">User</th>
+                    <th style="text-align: left; padding: 0.75rem;">Subject</th>
+                    <th style="text-align: left; padding: 0.75rem;">Marks</th>
+                    <th style="text-align: left; padding: 0.75rem;">Grade</th>
+                    <th style="text-align: left; padding: 0.75rem;">Semester</th>
+                    <th style="text-align: left; padding: 0.75rem;">Year</th>
+                    <th style="text-align: left; padding: 0.75rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grades %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;">{{ g.username }}</td>
+                    <td style="padding: 0.75rem;">{{ g.subject }}</td>
+                    <td style="padding: 0.75rem;">{{ g.marks }}/{{ g.max_marks }}</td>
+                    <td style="padding: 0.75rem;">{{ g.grade }}</td>
+                    <td style="padding: 0.75rem;">{{ g.semester }}</td>
+                    <td style="padding: 0.75rem;">{{ g.academic_year }}</td>
+                    <td style="padding: 0.75rem;">
+                        <form method="POST" action="{{ url_for('admin_delete_grade', grade_id=g.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted);">No grades yet. Add one above.</p>
+    {% endif %}
+</div>
+{% endblock %}

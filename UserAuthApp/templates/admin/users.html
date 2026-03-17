@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block admin_title %}Users{% endblock %}
+
+{% block admin_content %}
+<h1 style="margin-bottom: 1.5rem;">All Users</h1>
+
+<div class="card" style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border);">
+                <th style="text-align: left; padding: 0.75rem;">ID</th>
+                <th style="text-align: left; padding: 0.75rem;">Username</th>
+                <th style="text-align: left; padding: 0.75rem;">Email</th>
+                <th style="text-align: left; padding: 0.75rem;">Full Name</th>
+                <th style="text-align: left; padding: 0.75rem;">Admin</th>
+                <th style="text-align: left; padding: 0.75rem;">Joined</th>
+                <th style="text-align: left; padding: 0.75rem;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem;">{{ u.id }}</td>
+                <td style="padding: 0.75rem;">{{ u.username }}</td>
+                <td style="padding: 0.75rem;">{{ u.email }}</td>
+                <td style="padding: 0.75rem;">{{ u.full_name }}</td>
+                <td style="padding: 0.75rem;">{% if u.is_admin %}✓{% else %}-{% endif %}</td>
+                <td style="padding: 0.75rem;">{{ u.created_at[:10] }}</td>
+                <td style="padding: 0.75rem;">
+                    {% if not u.is_admin %}
+                    <form method="POST" action="{{ url_for('admin_set_admin', user_id=u.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Make Admin</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -70,3 +70,21 @@ VALUES (1, 'Mathematics', 85, 100, 'A', '1', '2024-25');
 ```
 
 Or use the "Add Sample Grades (Demo)" button on the dashboard after login for testing.
+
+## Admin Panel
+
+### Enable Admin
+
+1. Run the admin migration in MySQL Workbench:
+   ```sql
+   -- Open admin_migration.sql and execute it
+   ```
+   This adds an `is_admin` column and makes the first user an admin.
+
+2. Log in with that user. You'll be redirected to the Admin Dashboard.
+
+### Admin Features
+
+- **Dashboard**: Overview of user and grade counts
+- **Users**: List all users, promote users to admin
+- **Grades**: Add grades for any user, view/delete grade records

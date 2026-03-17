@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% block admin_title %}Admin Dashboard{% endblock %}
+
+{% block admin_content %}
+<h1 style="margin-bottom: 1.5rem;">Admin Dashboard</h1>
+
+<div class="grid-2">
+    <div class="card">
+        <h2>Users</h2>
+        <p style="font-size: 2rem; color: var(--accent);">{{ user_count }}</p>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-primary">Manage Users</a>
+    </div>
+    <div class="card">
+        <h2>Grade Records</h2>
+        <p style="font-size: 2rem; color: var(--accent);">{{ grade_count }}</p>
+        <a href="{{ url_for('admin_grades') }}" class="btn btn-primary">Manage Grades</a>
+    </div>
+</div>
+{% endblock %}
